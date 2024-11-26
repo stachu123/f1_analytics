@@ -29,19 +29,18 @@ def get_race_data(request, id):
         if not os.path.exists(csv_file_path):
             return JsonResponse({'error': 'Race data not found'}, status=404)
         
-        # Load the CSV into a DataFrame
-        data = pd.read_csv(csv_file_path, encoding='utf-8')
+        # Read the CSV file
+        jsonArray = []
 
-        time_columns = ["Time", "LapTime", "PitOutTime", "PitInTime",
-                        "Sector1Time", "Sector2Time", "Sector3Time", 
-                        "Sector1SessionTime", "Sector2SessionTime", "Sector3SessionTime", 
-                        "LapStartTime"]
-        for col in time_columns:
-            if col in data.columns:
-                data[col] = data[col].astype(str)
-        
-        # Convert DataFrame to JSON format
-        data_json = data.to_dict(orient='records')
+        with open(csv_file_path, encoding='utf-8') as csvf:
+            csvReader = csv.DictReader(csvf)
+
+            for row in csvReader:
+                jsonArray.append(row)
+
+        data_json = jsonArray
+
+                
         
         # Return the data as a JSON response
         return JsonResponse({'race_id': id, 'data': data_json}, safe=False)

@@ -131,3 +131,41 @@ button:focus-visible {
     color: #aaa;
   }
 }
+
+ /*(Driver buttons css code)*/
+.driver-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.driver-button {
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 5px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.driver-button:hover {
+  background-color: #45a049;
+}
+
+.driver-button.selected {
+  background-color: #ff9800; /* Highlight color for selected button */
+  transform: scale(1.1);    /* Slightly enlarge the selected button */
+  font-weight: bold;        /* Make the text bold for visibility */
+}
+
+.driver-number-img {
+  width: 40px; /* Adjust the size of the image */
+  height: 40px;
+  object-fit: contain; /* Ensure the image scales correctly */
+}
