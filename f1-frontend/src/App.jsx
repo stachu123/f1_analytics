@@ -7,7 +7,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<RaceList season={2024} />} />
-      <Route path="/visualization/:id" element={<RaceVisualization />} />
+      <Route path="/visualization/:raceId" element={<RaceVisualization />} />
     </Routes>
   );
 };

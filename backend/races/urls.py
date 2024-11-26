@@ -1,7 +1,7 @@
-from django.urls import path, include
-from .views import RaceListView
+from django.urls import path
+from .views import RaceListView, get_race_data
 
 urlpatterns = [
-    path('races/<int:season>', RaceListView.as_view(), name='race-list'),
-    path('races/<int:id>/', RaceDetailView.as_view(), name='race-detail'),
+    path('races/<int:season>/', RaceListView.as_view(), name='race-list'),
+    path('race/<int:id>/', get_race_data, name='race-detail'),  
 ]
