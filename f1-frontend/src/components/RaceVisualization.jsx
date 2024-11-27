@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
-import * as d3 from "d3";
 import { useParams } from "react-router-dom";
-import LaptimesPlot from "./laptimesplot";
+import LaptimesPlot from "./laptimesplot.jsx";
+import * as d3 from "d3";
 
 const RaceVisualization = () => {
-  const { raceId } = useParams(); // Get race ID from URL
+  const { raceId } = useParams();
   const [raceData, setRaceData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [driverNumbers, setDriverNumbers] = useState([]); // Store unique driver numbers
+  const [driverNumbers, setDriverNumbers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [globalExtents, setGlobalExtents] = useState({
+    lapNumberExtent: [0, 1],
+    lapTimeExtent: [0, 1],
+  });
 
-  // Fetching the data:
   useEffect(() => {
     fetch(`http://127.0.0.1:8000/api/race/${raceId}/`)
       .then((response) => {
@@ -22,10 +25,12 @@ const RaceVisualization = () => {
         return response.json();
       })
       .then((data) => {
-        setRaceData(data.data); // Extract 'data' field from API response
-        console.log(data.data);
+        const raceData = data.data;
+        setRaceData(raceData);
+        console.log(raceData);
         setLoading(false);
-        const driverDetails = data.data.map((entry) => ({
+
+        const driverDetails = raceData.map((entry) => ({
           driverNumber: entry.DriverNumber,
           driverName: entry.Driver,
         }));
@@ -37,6 +42,46 @@ const RaceVisualization = () => {
         );
 
         setDriverNumbers(uniqueDrivers);
+
+        const parseLapTime = (lapTime) => {
+          // Check if lapTime is a valid string
+          if (typeof lapTime !== "string") {
+            return null;
+          }
+
+          if (!lapTime.trim()) return null; // Ensure lapTime is not just empty spaces
+
+          // Match the time in the format: "X days HH:MM:SS.SSSSSS"
+          const timeMatch = lapTime.match(
+            /(\d+) days? (\d+):(\d+):(\d+)\.(\d+)/
+          );
+          if (!timeMatch) return null; // If the regex doesn't match, return null
+
+          // Destructure the match result into components (days, hours, minutes, seconds, and milliseconds)
+          const [, days, hours, minutes, seconds, milliseconds] = timeMatch.map(
+            (v, i) => (i === 0 ? v : Number(v))
+          );
+
+          // Convert everything to total seconds:
+          const totalSeconds =
+            days * 24 * 60 * 60 + // Convert days to seconds
+            hours * 60 * 60 + // Convert hours to seconds
+            minutes * 60 + // Convert minutes to seconds
+            seconds + // Add seconds
+            milliseconds / 1000000; // Convert milliseconds to seconds
+
+          return totalSeconds;
+        };
+
+        const allLapNumbers = raceData.map((d) => +d.LapNumber);
+        const allLapTimes = raceData
+          .map((d) => parseLapTime(d.LapTime))
+          .filter((t) => t !== null);
+
+        setGlobalExtents({
+          lapNumberExtent: [d3.min(allLapNumbers), d3.max(allLapNumbers)],
+          lapTimeExtent: [d3.min(allLapTimes), d3.max(allLapTimes)],
+        });
       })
       .catch((error) => {
         console.error("Error fetching race data:", error);
@@ -48,38 +93,42 @@ const RaceVisualization = () => {
     setSelectedDriver(driverNumber);
   };
 
-  const filteredData = raceData.filter(
-    (entry) => entry.DriverNumber === selectedDriver
-  );
+  const filteredData = selectedDriver
+    ? raceData.filter((d) => d.DriverNumber === selectedDriver)
+    : raceData;
 
   return (
     <div>
-      {/* Render buttons for each driver */}
-      <div className="driver-buttons">
-        {driverNumbers.map((driver) => (
-          <button
-            key={driver.driverNumber}
-            onClick={() => handleDriverClick(driver.driverNumber)}
-            className={`driver-button ${
-              selectedDriver === driver.driverNumber ? "selected" : ""
-            }`}
-          >
-            <img
-              src={`/images/numbers/${driver.driverNumber}.avif`} // Path to AVIF number image
-              alt={`Driver ${driver.driverNumber}`}
-              className="driver-number-img"
-            />
-            {driver.driverName}
-          </button>
-        ))}
-      </div>
-      <div className="plot-container">
-        {selectedDriver ? (
-          <LaptimesPlot data={filteredData} />
-        ) : (
-          <p>Please select a driver to view their lap times.</p>
-        )}
-      </div>
+      {loading && <p>Loading race data...</p>}
+
+      {!loading && (
+        <>
+          <div className="driver-buttons">
+            {driverNumbers.map((driver) => (
+              <button
+                key={driver.driverNumber}
+                onClick={() => handleDriverClick(driver.driverNumber)}
+                className={`driver-button ${
+                  selectedDriver === driver.driverNumber ? "selected" : ""
+                }`}
+              >
+                <img
+                  src={`/images/numbers/${driver.driverNumber}.avif`}
+                  alt={`Driver ${driver.driverNumber}`}
+                  className="driver-number-img"
+                />
+                {driver.driverName}
+              </button>
+            ))}
+          </div>
+
+          <LaptimesPlot
+            data={filteredData}
+            allData={raceData}
+            globalExtents={globalExtents}
+          />
+        </>
+      )}
     </div>
   );
 };
