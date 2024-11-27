@@ -166,6 +166,7 @@ button:focus-visible {
 
 .driver-number-img {
   width: 40px; /* Adjust the size of the image */
-  height: 40px;
+  height: 20px;
   object-fit: contain; /* Ensure the image scales correctly */
 }
+
