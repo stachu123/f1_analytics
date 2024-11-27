@@ -113,20 +113,75 @@ const LaptimesPlot = ({ data, globalExtents }) => {
     // Update the line path
     const line = chart.selectAll(".line").data([processedData]);
 
-    // Render scatterplot
-    chart
-      .selectAll(".scatterplot-circle")
-      .data(processedData)
-      .join("circle")
+    // Enter new path
+    line
+      .enter()
+      .append("path")
+      .attr("class", "line")
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 2)
+      .attr("d", lineGenerator(processedData))
+      .attr("stroke-dasharray", function () {
+        const totalLength = this.getTotalLength();
+        return totalLength; // Set the dash array to the total path length
+      })
+      .attr("stroke-dashoffset", function () {
+        const totalLength = this.getTotalLength();
+        return totalLength; // Initially hide the path
+      })
+      .transition()
+      .duration(2000) // Adjust the duration for the drawing effect
+      .ease(d3.easeLinear)
+      .attr("stroke-dashoffset", 0);
+
+    // Update existing path
+    line
+    .transition()
+    .duration(2000)
+    .ease(d3.easeLinear)
+    .attr("stroke-dashoffset", 0)
+    .attr("d", lineGenerator(processedData));
+
+    // Handle circles (scatter plot)
+    const circles = chart.selectAll(".scatterplot-circle").data(processedData);
+
+    // Enter new circles
+
+    const circleEnter = circles
+      .enter()
+      .append("circle")
       .attr("class", "scatterplot-circle")
       .attr("cx", (d) => xScale(d.LapNumber))
       .attr("cy", (d) => yScale(d.LapTime))
-      .attr("r", 6)
+      .attr("r", 0)
       .attr("fill", "steelblue")
       .attr("opacity", 0.7)
       .attr("stroke", "black")
-      .attr("stroke-width", 0.5);
-  }, [props.data, innerWidth, innerHeight]);
+      .attr("stroke-width", 0.5).transition()
+      .delay((d, i) => i * 35) // Delay each circle based on its index
+      .duration(500)
+      .attr("r", 4);
+
+    // Animate the entering circles
+    circleEnter
+      .transition()
+      .duration(1000)
+      .ease(d3.easeLinear)
+      .attr("cx", (d) => xScale(d.LapNumber))
+      .attr("cy", (d) => yScale(d.LapTime));
+
+    // Update existing circles
+    circles
+      .transition()
+      .duration(1000)
+      .ease(d3.easeLinear)
+      .attr("cx", (d) => xScale(d.LapNumber))
+      .attr("cy", (d) => yScale(d.LapTime));
+
+    // Exit and remove circles
+    circles.exit().transition().duration(500).attr("r", 0).remove();
+  }, [data, globalExtents]);
 
   return <svg ref={svgRef}></svg>;
 };
