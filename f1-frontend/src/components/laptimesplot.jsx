@@ -1,19 +1,24 @@
 import { useRef, useEffect } from "react";
 import * as d3 from "d3";
+import { drawLaptimes } from "./DrawLapTimes";
 
-const LaptimesPlot = ({ data, globalExtents }) => {
+const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    svg.selectAll("*").remove(); // Clear the SVG on each update
+    svg.selectAll("*").remove(); // Clear the SVG
 
-    const width = svg.node().parentNode.clientWidth || 800; // Fallback width
-    const height = 500;
+    const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
+    const height = width * 0.4; // Maintain aspect ratio
     const margin = { top: 20, right: 20, bottom: 40, left: 80 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
+
+    svg
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const chart = svg
       .attr("width", width)
@@ -45,12 +50,19 @@ const LaptimesPlot = ({ data, globalExtents }) => {
       return totalSeconds;
     };
 
-    const processedData = data
-      .map((d) => ({
-        LapNumber: +d.LapNumber,
-        LapTime: parseLapTime(d.LapTime),
-      }))
-      .filter((d) => d.LapTime !== null);
+    const processData = (rawData) => {
+      return rawData
+        .map((d) => ({
+          LapNumber: +d.LapNumber,
+          LapTime: parseLapTime(d.LapTime),
+        }))
+        .filter((d) => d.LapTime !== null);
+    };
+    const processedData = processData(data);
+    const processedData2 = processData(data2);
+
+    console.log("processedData:", processedData);
+    console.log("processedData2:", processedData2);
 
     // Scales
     const xScale = d3
@@ -103,85 +115,16 @@ const LaptimesPlot = ({ data, globalExtents }) => {
       .attr("transform", "rotate(-90)")
       .text("Lap Time (MM:SS.SS)");
 
-    // Line generator
-    const lineGenerator = d3
-      .line()
-      .x((d) => xScale(d.LapNumber))
-      .y((d) => yScale(d.LapTime))
-      .curve(d3.curveStep);
-
-    // Update the line path
-    const line = chart.selectAll(".line").data([processedData]);
-
-    // Enter new path
-    line
-      .enter()
-      .append("path")
-      .attr("class", "line")
-      .attr("fill", "none")
-      .attr("stroke", "steelblue")
-      .attr("stroke-width", 2)
-      .attr("d", lineGenerator(processedData))
-      .attr("stroke-dasharray", function () {
-        const totalLength = this.getTotalLength();
-        return totalLength; // Set the dash array to the total path length
-      })
-      .attr("stroke-dashoffset", function () {
-        const totalLength = this.getTotalLength();
-        return totalLength; // Initially hide the path
-      })
-      .transition()
-      .duration(2000) // Adjust the duration for the drawing effect
-      .ease(d3.easeLinear)
-      .attr("stroke-dashoffset", 0);
-
-    // Update existing path
-    line
-    .transition()
-    .duration(2000)
-    .ease(d3.easeLinear)
-    .attr("stroke-dashoffset", 0)
-    .attr("d", lineGenerator(processedData));
-
-    // Handle circles (scatter plot)
-    const circles = chart.selectAll(".scatterplot-circle").data(processedData);
-
-    // Enter new circles
-
-    const circleEnter = circles
-      .enter()
-      .append("circle")
-      .attr("class", "scatterplot-circle")
-      .attr("cx", (d) => xScale(d.LapNumber))
-      .attr("cy", (d) => yScale(d.LapTime))
-      .attr("r", 0)
-      .attr("fill", "steelblue")
-      .attr("opacity", 0.7)
-      .attr("stroke", "black")
-      .attr("stroke-width", 0.5).transition()
-      .delay((d, i) => i * 35) // Delay each circle based on its index
-      .duration(500)
-      .attr("r", 4);
-
-    // Animate the entering circles
-    circleEnter
-      .transition()
-      .duration(1000)
-      .ease(d3.easeLinear)
-      .attr("cx", (d) => xScale(d.LapNumber))
-      .attr("cy", (d) => yScale(d.LapTime));
-
-    // Update existing circles
-    circles
-      .transition()
-      .duration(1000)
-      .ease(d3.easeLinear)
-      .attr("cx", (d) => xScale(d.LapNumber))
-      .attr("cy", (d) => yScale(d.LapTime));
-
-    // Exit and remove circles
-    circles.exit().transition().duration(500).attr("r", 0).remove();
-  }, [data, globalExtents]);
+    drawLaptimes(
+      processData,
+      processedData2,
+      chart,
+      xScale,
+      yScale,
+      "#ff0000",
+      "#0000ff"
+    );
+  }, [data, data2, globalExtents]);
 
   return <svg ref={svgRef}></svg>;
 };

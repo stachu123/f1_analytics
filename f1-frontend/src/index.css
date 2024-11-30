@@ -22,13 +22,6 @@ a:hover {
   color: #535bf2;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
 
 h1 {
   font-size: 3.2em;
@@ -112,46 +105,54 @@ button:focus-visible {
   justify-content: center; 
 }
 
-@media (prefers-color-scheme: dark) {
-  .race-tile {
-    background-color: #333;
-    color: rgba(255, 255, 255, 0.87);
-    border: 1px solid #555;
+@media (max-width: 768px) {
+  .driver-buttons-container {
+    flex-direction: column; /* Stack left and right groups vertically */
+    gap: 2rem; /* Add space between the two groups */
   }
 
-  .race-name {
-    color: #eaeaea;
-  }
-
-  .race-date {
-    color: #8fa8ff;
-  }
-
-  .race-location {
-    color: #aaa;
+  .left-buttons,
+  .right-buttons {
+    max-width: 100%; /* Allow groups to take full width */
+    justify-content: center; /* Center buttons when stacked */
   }
 }
 
  /*(Driver buttons css code)*/
-.driver-buttons {
+ .race-visualization-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column; /* Stack sections vertically */
+  align-items: center;    /* Center align content horizontally */
+  gap: 2rem;              /* Space between the button container and the plot */
+  width: 100%;            /* Ensure the container spans the full screen */
 }
 
-.driver-button {
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 5px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+.driver-buttons-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between; /* Push left and right groups to the edges */
+  width: 100%;                    /* Ensure the container spans the full screen */
+  padding: 0 2rem;                /* Add some horizontal padding */
+  box-sizing: border-box;         /* Include padding in the width calculation */
+}
+
+.driver-buttons {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping into multiple rows */
+  gap: 10px; /* Space between buttons */
+  justify-content: center; /* Center buttons in their container */
+}
+.driver-button {
+  flex: 1 1 calc(25% - 10px); /* Buttons take up 25% width minus gap */
+  min-width: 30px; /* Ensure buttons have a minimum size */
+  max-width: 70px; /* Optional: Limit the maximum size */
+}
+
+.left-buttons,
+.right-buttons {
+  display: flex; /* Ensure the flex behavior applies */
+  flex-wrap: wrap; /* Enable wrapping into multiple rows */
+  gap: 10px; /* Space between buttons */
+  justify-content: flex-start; /* Align buttons to start of their section */
 }
 
 .driver-button:hover {
@@ -165,8 +166,15 @@ button:focus-visible {
 }
 
 .driver-number-img {
-  width: 40px; /* Adjust the size of the image */
+  width: 30px; /* Adjust the size of the image */
   height: 20px;
   object-fit: contain; /* Ensure the image scales correctly */
+}
+
+.laptime-plot-container {
+  width: 100%;
+  max-width: 1280px; /* Limit the maximum width of the plot */
+  margin-top: 2rem;
+  text-align: center;
 }
 
