@@ -143,15 +143,16 @@ button:focus-visible {
 }
 .driver-button {
   flex: 1 1 calc(25% - 10px); /* Buttons take up 25% width minus gap */
-  min-width: 30px; /* Ensure buttons have a minimum size */
+  min-width: 40px; /* Ensure buttons have a minimum size */
   max-width: 70px; /* Optional: Limit the maximum size */
+  font-size: 10px;
 }
 
 .left-buttons,
 .right-buttons {
   display: flex; /* Ensure the flex behavior applies */
   flex-wrap: wrap; /* Enable wrapping into multiple rows */
-  gap: 10px; /* Space between buttons */
+  gap: 15px; /* Space between buttons */
   justify-content: flex-start; /* Align buttons to start of their section */
 }
 
@@ -166,8 +167,8 @@ button:focus-visible {
 }
 
 .driver-number-img {
-  width: 30px; /* Adjust the size of the image */
-  height: 20px;
+  width: 25px; /* Adjust the size of the image */
+  height: 15px;
   object-fit: contain; /* Ensure the image scales correctly */
 }
 

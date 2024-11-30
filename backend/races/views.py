@@ -22,7 +22,7 @@ def get_race_data(request, id):
     try:
         # Construct the CSV file path based on the race ID
         csv_file_path = os.path.join(
-            "C:/Users/stani/f1_analytics/backend/backend/media/race_csvs/", f"{id}.csv"
+            "C:/Users/stani/Desktop/inzynierka/f1_analytics/backend/backend/media/race_csvs/", f"{id}.csv"
         )
         
         # Check if the file exists

@@ -103,10 +103,10 @@ const RaceVisualization = () => {
       ? raceData.filter((d) => d.DriverNumber === driverNumber)
       : [];
   };
+  
 
   const filteredData1 = getFilteredData(selectedDriver1);
   const filteredData2 = getFilteredData(selectedDriver2);
-
   return (
     <div className="race-visualization-container">
       {loading && <p>Loading race data...</p>}
@@ -159,7 +159,7 @@ const RaceVisualization = () => {
           {/* Lap Times Plot */}
           <div className="laptime-plot-container">
             <LaptimesPlot
-              data1={filteredData1} // Pass data for the first driver
+              data={filteredData1} // Pass data for the first driver
               data2={filteredData2} // Pass data for the second driver
               globalExtents={globalExtents}
             />

@@ -1,13 +1,12 @@
 import { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { drawLaptimes } from "./DrawLapTimes";
+import { drawLaptimes, drawLaptimes2 } from "./DrawLapTimes";
 
-const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
+const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
   const svgRef = useRef();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-
     svg.selectAll("*").remove(); // Clear the SVG
 
     const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
@@ -61,8 +60,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
     const processedData = processData(data);
     const processedData2 = processData(data2);
 
-    console.log("processedData:", processedData);
-    console.log("processedData2:", processedData2);
+
 
     // Scales
     const xScale = d3
@@ -76,7 +74,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .domain(globalExtents.lapTimeExtent)
       .range([innerHeight, 0])
       .nice();
-
+ 
     /**
      * Formats a time in seconds to a string of the form mm:ss.cc
      * @param {number} timeInSeconds - The time in seconds to format
@@ -90,40 +88,87 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
         .padStart(5, "0")}`;
     };
 
-    const xAxis = d3.axisBottom(xScale).ticks(processedData.length);
+    const xAxis = d3.axisBottom(xScale).ticks(globalExtents.lapNumberExtent);
     const yAxis = d3.axisLeft(yScale).tickFormat(formatTime);
+    
 
     chart
       .append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
-      .call(xAxis)
-      .append("text")
-      .attr("x", innerWidth / 2)
-      .attr("y", 35)
-      .attr("fill", "black")
-      .style("text-anchor", "middle")
-      .text("Lap Number");
+      .call(xAxis);
 
-    chart
-      .append("g")
-      .call(yAxis)
-      .append("text")
-      .attr("x", -innerHeight / 2)
-      .attr("y", -60)
-      .attr("fill", "black")
-      .style("text-anchor", "middle")
-      .attr("transform", "rotate(-90)")
-      .text("Lap Time (MM:SS.SS)");
+    
+      const yAxisGroup = chart.append("g").attr("class", "y-axis").call(yAxis);
 
-    drawLaptimes(
-      processData,
-      processedData2,
-      chart,
-      xScale,
-      yScale,
-      "#ff0000",
-      "#0000ff"
+      if (processedData.length > 0) {
+        drawLaptimes(
+          processedData,
+          chart,
+          xScale,
+          yScale,
+          "#ff0000",
+          "#0000ff"
+        );
+      }
+  
+      if (processedData2.length > 0) {
+        drawLaptimes2(
+          processedData2,
+          chart,
+          xScale,
+          yScale,
+          "#00ff00",
+          "#ff00ff"
+        );
+      }
+    // Zoom button functionality
+  svg
+  .append("g")
+  .attr("transform", `translate(${width - 40}, 10)`)
+  .append("rect")
+  .attr("width", 30)
+  .attr("height", 30)
+  .attr("fill", "lightgray")
+  .attr("rx", 5)
+  .attr("ry", 5)
+  .on("click", () => {
+    // Update the yScale domain
+    const maxLapTime = Math.max(
+      ...[...processedData, ...processedData2].map((d) => d.LapTime)
     );
+    yScale.domain([globalExtents.lapTimeExtent[0], maxLapTime - 10]);
+
+    // Redraw the y-axis
+    yAxisGroup.transition().call(d3.axisLeft(yScale).tickFormat(formatTime));
+    chart.selectAll(".line").remove(); // Remove the first dataset line
+    chart.selectAll(".line2").remove(); // Remove the second dataset line
+    chart.selectAll(".scatterplot-circle").remove(); // Remove first dataset circles
+    chart.selectAll(".scatterplot-circle2").remove(); // Remove second dataset circles
+
+    // Redraw the data
+    svg.selectAll(".data-point").remove(); // Clear existing data points
+    if (processedData.length > 0) {
+      drawLaptimes(processedData, chart, xScale, yScale, "#ff0000", "#0000ff");
+    }
+    if (processedData2.length > 0) {
+      drawLaptimes2(
+        processedData2,
+        chart,
+        xScale,
+        yScale,
+        "#00ff00",
+        "#ff00ff"
+      );
+    }
+  })
+  .append("text")
+  .attr("x", 15)
+  .attr("y", 20)
+  .attr("text-anchor", "middle")
+  .attr("fill", "black")
+  .attr("font-size", 16)
+  .text("+");
+
   }, [data, data2, globalExtents]);
 
   return <svg ref={svgRef}></svg>;
