@@ -67,7 +67,7 @@ export const drawLaptimes = (
     .transition()
     .delay((d, i) => i * 35) // Delay each circle based on its index
     .duration(500)
-    .attr("r", 4);
+    .attr("r", 2);
 
   // Animate the entering circles
   circleEnter
@@ -155,7 +155,7 @@ export const drawLaptimes2 = (
     .transition()
     .delay((d, i) => i * 35) // Delay each circle based on its index
     .duration(500)
-    .attr("r", 4);
+    .attr("r", 2);
 
   // Animate the entering circles
   circleEnter2

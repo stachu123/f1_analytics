@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import LaptimesPlot from "./laptimesplot.jsx";
-import * as d3 from "d3";
+import { fetchRaceData } from "./chart_components/LoadLapTimeData";
 
 const RaceVisualization = () => {
   const { raceId } = useParams();
@@ -16,78 +16,21 @@ const RaceVisualization = () => {
   });
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/api/race/${raceId}/`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(
-            `Network response was not ok: ${response.statusText}`
-          );
-        }
-        return response.json();
-      })
-      .then((data) => {
-        const raceData = data.data;
+    const loadRaceData = async () => {
+      setLoading(true);
+      try {
+        const { raceData, uniqueDrivers, globalExtents } = await fetchRaceData(raceId);
         setRaceData(raceData);
-        console.log(raceData);
-        setLoading(false);
-
-        const driverDetails = raceData.map((entry) => ({
-          driverNumber: entry.DriverNumber,
-          driverName: entry.Driver,
-        }));
-
-        const uniqueDrivers = Array.from(
-          new Map(
-            driverDetails.map((item) => [item.driverNumber, item])
-          ).values()
-        );
-
         setDriverNumbers(uniqueDrivers);
-
-        const parseLapTime = (lapTime) => {
-          // Check if lapTime is a valid string
-          if (typeof lapTime !== "string") {
-            return null;
-          }
-
-          if (!lapTime.trim()) return null; // Ensure lapTime is not just empty spaces
-
-          // Match the time in the format: "X days HH:MM:SS.SSSSSS"
-          const timeMatch = lapTime.match(
-            /(\d+) days? (\d+):(\d+):(\d+)\.(\d+)/
-          );
-          if (!timeMatch) return null; // If the regex doesn't match, return null
-
-          // Destructure the match result into components (days, hours, minutes, seconds, and milliseconds)
-          const [, days, hours, minutes, seconds, milliseconds] = timeMatch.map(
-            (v, i) => (i === 0 ? v : Number(v))
-          );
-
-          // Convert everything to total seconds:
-          const totalSeconds =
-            days * 24 * 60 * 60 + // Convert days to seconds
-            hours * 60 * 60 + // Convert hours to seconds
-            minutes * 60 + // Convert minutes to seconds
-            seconds + // Add seconds
-            milliseconds / 1000000; // Convert milliseconds to seconds
-
-          return totalSeconds;
-        };
-
-        const allLapNumbers = raceData.map((d) => +d.LapNumber);
-        const allLapTimes = raceData
-          .map((d) => parseLapTime(d.LapTime))
-          .filter((t) => t !== null);
-
-        setGlobalExtents({
-          lapNumberExtent: [d3.min(allLapNumbers), d3.max(allLapNumbers)],
-          lapTimeExtent: [d3.min(allLapTimes), d3.max(allLapTimes)],
-        });
-      })
-      .catch((error) => {
-        console.error("Error fetching race data:", error);
+        setGlobalExtents(globalExtents);
+      } catch (error) {
+        console.error("Failed to load race data:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    loadRaceData();
   }, [raceId]);
 
   const handleDriverClick = (driverNumber, isFirstDriver) => {
@@ -103,10 +46,10 @@ const RaceVisualization = () => {
       ? raceData.filter((d) => d.DriverNumber === driverNumber)
       : [];
   };
-  
 
   const filteredData1 = getFilteredData(selectedDriver1);
   const filteredData2 = getFilteredData(selectedDriver2);
+
   return (
     <div className="race-visualization-container">
       {loading && <p>Loading race data...</p>}
@@ -121,7 +64,7 @@ const RaceVisualization = () => {
                 <button
                   key={`left-${driver.driverNumber}`}
                   onClick={() => handleDriverClick(driver.driverNumber, true)} // Pass true for first driver
-                  className={`driver-button ${
+                  className={`driver-button-left ${
                     selectedDriver1 === driver.driverNumber ? "selected" : ""
                   }`}
                 >
@@ -141,7 +84,7 @@ const RaceVisualization = () => {
                 <button
                   key={`right-${driver.driverNumber}`}
                   onClick={() => handleDriverClick(driver.driverNumber, false)} // Pass false for second driver
-                  className={`driver-button ${
+                  className={`driver-button-right ${
                     selectedDriver2 === driver.driverNumber ? "selected" : ""
                   }`}
                 >

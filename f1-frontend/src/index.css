@@ -160,8 +160,14 @@ button:focus-visible {
   background-color: #45a049;
 }
 
-.driver-button.selected {
+.driver-button-left.selected {
   background-color: #ff9800; /* Highlight color for selected button */
+  transform: scale(1.1);    /* Slightly enlarge the selected button */
+  font-weight: bold;        /* Make the text bold for visibility */
+}
+
+.driver-button-right.selected {
+  background-color: #00ff55; /* Highlight color for selected button */
   transform: scale(1.1);    /* Slightly enlarge the selected button */
   font-weight: bold;        /* Make the text bold for visibility */
 }

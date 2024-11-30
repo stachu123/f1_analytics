@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import RaceList from "./components/RaceList";
-import RaceVisualization from "./components/RaceVisualization";
+import RaceVisualization from "./components/LapTime/RaceVisualization";
 
 const App = () => {
   return (

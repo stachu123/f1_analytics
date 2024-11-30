@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { drawLaptimes, drawLaptimes2 } from "./DrawLapTimes";
+import { drawLaptimes, drawLaptimes2 } from "./chart_components/DrawLapTimes";
 
 const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
   const svgRef = useRef();
@@ -106,8 +106,8 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
           chart,
           xScale,
           yScale,
-          "#ff0000",
-          "#0000ff"
+          "#ff9800",
+          "#fff"
         );
       }
   
@@ -117,8 +117,8 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
           chart,
           xScale,
           yScale,
-          "#00ff00",
-          "#ff00ff"
+          "#00ff55",
+          "#fff"
         );
       }
     // Zoom button functionality
@@ -148,7 +148,7 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
     // Redraw the data
     svg.selectAll(".data-point").remove(); // Clear existing data points
     if (processedData.length > 0) {
-      drawLaptimes(processedData, chart, xScale, yScale, "#ff0000", "#0000ff");
+      drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
     }
     if (processedData2.length > 0) {
       drawLaptimes2(
@@ -156,8 +156,8 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
         chart,
         xScale,
         yScale,
-        "#00ff00",
-        "#ff00ff"
+        "#00ff55",
+        "#fff"
       );
     }
   })
@@ -165,7 +165,7 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
   .attr("x", 15)
   .attr("y", 20)
   .attr("text-anchor", "middle")
-  .attr("fill", "black")
+  .attr("fill", "white")
   .attr("font-size", 16)
   .text("+");
 
