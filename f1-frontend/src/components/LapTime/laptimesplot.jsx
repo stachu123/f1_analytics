@@ -2,16 +2,18 @@ import { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { drawLaptimes, drawLaptimes2 } from "./chart_components/DrawLapTimes";
 
-const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
+const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
+  const prevDataRef = useRef([]); // Store previous `data`
+  const prevData2Ref = useRef([]);
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Clear the SVG
+    // svg.selectAll("*").remove(); // Clear the SVG
 
     const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
     const height = width * 0.4; // Maintain aspect ratio
-    const margin = { top: 20, right: 20, bottom: 40, left: 80 };
+    const margin = { top: 20, right: 80, bottom: 40, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -48,19 +50,39 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
 
       return totalSeconds;
     };
-
+    console.log(data);
     const processData = (rawData) => {
       return rawData
         .map((d) => ({
           LapNumber: +d.LapNumber,
           LapTime: parseLapTime(d.LapTime),
+          Driver: d.Driver,
+          Team: d.Team,
         }))
         .filter((d) => d.LapTime !== null);
     };
+    const isSameData = (newData, oldData) => {
+      if (newData.length !== oldData.length) return false;
+      return newData.every(
+        (item, index) =>
+          item.LapNumber === oldData[index].LapNumber &&
+          item.LapTime === oldData[index].LapTime
+      );
+    };
+
     const processedData = processData(data);
     const processedData2 = processData(data2);
 
+    // Check for changes in `data` and `data2`
+    const isDataChanged = !isSameData(data, prevDataRef.current);
+    const isData2Changed = !isSameData(data2, prevData2Ref.current);
 
+    // If no changes in either dataset, skip redraw
+    if (!isDataChanged && !isData2Changed) return;
+
+    // Update previous data references
+    if (isDataChanged) prevDataRef.current = data;
+    if (isData2Changed) prevData2Ref.current = data2;
 
     // Scales
     const xScale = d3
@@ -74,7 +96,7 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
       .domain(globalExtents.lapTimeExtent)
       .range([innerHeight, 0])
       .nice();
- 
+
     /**
      * Formats a time in seconds to a string of the form mm:ss.cc
      * @param {number} timeInSeconds - The time in seconds to format
@@ -90,85 +112,86 @@ const LaptimesPlot = ({ data =[], data2 =[], globalExtents }) => {
 
     const xAxis = d3.axisBottom(xScale).ticks(globalExtents.lapNumberExtent);
     const yAxis = d3.axisLeft(yScale).tickFormat(formatTime);
-    
 
     chart
       .append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(xAxis);
 
-    
-      const yAxisGroup = chart.append("g").attr("class", "y-axis").call(yAxis);
+    const yAxisGroup = chart.append("g").attr("class", "y-axis").call(yAxis);
 
-      if (processedData.length > 0) {
-        drawLaptimes(
-          processedData,
-          chart,
-          xScale,
-          yScale,
-          "#ff9800",
-          "#fff"
-        );
-      }
-  
-      if (processedData2.length > 0) {
-        drawLaptimes2(
-          processedData2,
-          chart,
-          xScale,
-          yScale,
-          "#00ff55",
-          "#fff"
-        );
-      }
-    // Zoom button functionality
-  svg
-  .append("g")
-  .attr("transform", `translate(${width - 40}, 10)`)
-  .append("rect")
-  .attr("width", 30)
-  .attr("height", 30)
-  .attr("fill", "lightgray")
-  .attr("rx", 5)
-  .attr("ry", 5)
-  .on("click", () => {
-    // Update the yScale domain
-    const maxLapTime = Math.max(
-      ...[...processedData, ...processedData2].map((d) => d.LapTime)
-    );
-    yScale.domain([globalExtents.lapTimeExtent[0], maxLapTime - 10]);
-
-    // Redraw the y-axis
-    yAxisGroup.transition().call(d3.axisLeft(yScale).tickFormat(formatTime));
-    chart.selectAll(".line").remove(); // Remove the first dataset line
-    chart.selectAll(".line2").remove(); // Remove the second dataset line
-    chart.selectAll(".scatterplot-circle").remove(); // Remove first dataset circles
-    chart.selectAll(".scatterplot-circle2").remove(); // Remove second dataset circles
-
-    // Redraw the data
-    svg.selectAll(".data-point").remove(); // Clear existing data points
     if (processedData.length > 0) {
-      drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
+      if (isDataChanged) {
+        svg.selectAll(".driver-name-label").remove();
+        svg.selectAll(".scatterplot-circle").remove();
+        svg.selectAll(".line").remove(); // Remove old line
+        drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
+      }
     }
-    if (processedData2.length > 0) {
-      drawLaptimes2(
-        processedData2,
-        chart,
-        xScale,
-        yScale,
-        "#00ff55",
-        "#fff"
-      );
-    }
-  })
-  .append("text")
-  .attr("x", 15)
-  .attr("y", 20)
-  .attr("text-anchor", "middle")
-  .attr("fill", "white")
-  .attr("font-size", 16)
-  .text("+");
 
+    if (processedData2.length > 0) {
+      if (isData2Changed) {
+        svg.selectAll(".scatterplot-circle2").remove();
+        svg.selectAll(".line2").remove(); // Remove old line
+        drawLaptimes2(processedData2, chart, xScale, yScale, "#00ff55", "#fff");
+      }
+    }
+    // Zoom button functionality
+    svg
+      .append("g")
+      .attr("transform", `translate(${width - 40}, 10)`)
+      .append("rect")
+      .attr("width", 30)
+      .attr("height", 30)
+      .attr("fill", "lightgray")
+      .attr("rx", 5)
+      .attr("ry", 5)
+      .on("click", () => {
+        // Calculate the new yScale domain
+        const maxLapTime = Math.max(
+          ...[...processedData, ...processedData2].map((d) => d.LapTime)
+        );
+        yScale.domain([globalExtents.lapTimeExtent[0], maxLapTime - 10]);
+
+        // If needed, adjust the xScale to match the zoomed range (optional)
+        xScale.domain(globalExtents.lapNumberExtent); // Ensure the xScale domain remains consistent
+
+        // Redraw the y-axis
+        yAxisGroup
+          .transition()
+          .call(d3.axisLeft(yScale).tickFormat(formatTime));
+
+        //Clear existing data points and lines
+        chart.selectAll(".data-point").remove();
+        chart.selectAll(".line").remove(); // Remove first dataset line
+        chart.selectAll(".line2").remove(); // Remove second dataset line
+
+        // Redraw the data with the updated scales
+        if (processedData.length > 0) {
+          svg.selectAll(".scatterplot-circle").remove();
+          svg.selectAll(".line").remove(); // Remove old line
+          drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
+        }
+        if (processedData2.length > 0) {
+          svg.selectAll(".scatterplot-circle2").remove();
+          svg.selectAll(".line2").remove(); // Remove old line
+          drawLaptimes2(
+            processedData2,
+            chart,
+            xScale,
+            yScale,
+            "#00ff55",
+            "#fff"
+          );
+        }
+      })
+      .append("text")
+      .attr("x", 15)
+      .attr("y", 20)
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .attr("font-size", 16)
+      .text("+");
   }, [data, data2, globalExtents]);
 
   return <svg ref={svgRef}></svg>;

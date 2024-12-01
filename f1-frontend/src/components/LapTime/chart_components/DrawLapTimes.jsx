@@ -1,4 +1,3 @@
-
 import * as d3 from "d3";
 
 export const drawLaptimes = (
@@ -9,7 +8,6 @@ export const drawLaptimes = (
   lineColor,
   circleColor
 ) => {
-  
   const lineGenerator = d3
     .line()
     .x((d) => xScale(d.LapNumber))
@@ -17,37 +15,44 @@ export const drawLaptimes = (
     .curve(d3.curveCardinal);
 
   // Update the line path
+
   const line = chart.selectAll(".line").data([dataset]);
-
-  // Enter new path
-  line
-    .enter()
-    .append("path")
-    .attr("class", "line")
-    .attr("fill", "none")
-    .attr("stroke", lineColor)
-    .attr("stroke-width", 2)
-    .attr("d", lineGenerator(dataset))
-    .attr("stroke-dasharray", function () {
-      const totalLength = this.getTotalLength();
-      return totalLength;
-    })
-    .attr("stroke-dashoffset", function () {
-      const totalLength = this.getTotalLength();
-      return totalLength; // Initially hide the path
-    })
-    .transition()
-    .duration(2000)
-    .ease(d3.easeLinear)
-    .attr("stroke-dashoffset", 0);
-
-  line
-    .transition()
-    .duration(2000)
-    .ease(d3.easeLinear)
-    .attr("stroke-dashoffset", 0)
-    .attr("d", lineGenerator(dataset));
-
+  line.remove();
+  chart.selectAll(".line").remove();
+  line.join(
+    (enter) =>
+      enter
+        .append("path")
+        .attr("class", "line")
+        .attr("fill", "none")
+        .attr("stroke", lineColor)
+        .attr("stroke-width", 2)
+        .attr("d", lineGenerator(dataset))
+        .attr("stroke-dasharray", function () {
+          const totalLength = this.getTotalLength();
+          return totalLength;
+        })
+        .attr("stroke-dashoffset", function () {
+          const totalLength = this.getTotalLength();
+          return totalLength; // Initially hide the path
+        })
+        .transition()
+        .duration(2000)
+        .ease(d3.easeLinear)
+        .attr("stroke-dashoffset", 0),
+    (update) =>
+      update
+        .transition()
+        .duration(2000)
+        .ease(d3.easeLinear)
+        .attr("d", lineGenerator(dataset))
+        .attr("stroke-dasharray", function () {
+          const totalLength = this.getTotalLength();
+          return totalLength;
+        })
+        .attr("stroke-dashoffset", 0),
+    (exit) => exit.remove()
+  );
   // Handle circles (scatter plot)
   const circles = chart.selectAll(".scatterplot-circle").data(dataset);
 
@@ -87,6 +92,16 @@ export const drawLaptimes = (
 
   // Exit and remove circles
   circles.exit().transition().duration(500).attr("r", 0).remove();
+  const lastDataPoint = dataset[dataset.length - 1];
+
+  chart
+    .append("text")
+    .attr("class", "driver-name-label")
+    .attr("x", xScale(lastDataPoint.LapNumber) + 20) // Slight offset for clarity
+    .attr("y", yScale(lastDataPoint.LapTime))
+    .attr("fill", lineColor)
+    .attr("font-size", 16)
+    .text(lastDataPoint.Driver);
 };
 
 export const drawLaptimes2 = (
@@ -97,7 +112,6 @@ export const drawLaptimes2 = (
   lineColor,
   circleColor
 ) => {
-  
   const lineGenerator2 = d3
     .line()
     .x((d) => xScale(d.LapNumber))
@@ -175,4 +189,13 @@ export const drawLaptimes2 = (
 
   // Exit and remove circles
   circles2.exit().transition().duration(500).attr("r", 0).remove();
+  const lastDataPoint = dataset[dataset.length - 1];
+  chart
+    .append("text")
+    .attr("class", "driver-name-label2")
+    .attr("x", xScale(1)) // Slight offset for clarity
+    .attr("y", dataset[dataset.length - 1].LapTime)
+    .attr("fill", lineColor)
+    .attr("font-size", 16)
+    .text(lastDataPoint.Driver);
 };
