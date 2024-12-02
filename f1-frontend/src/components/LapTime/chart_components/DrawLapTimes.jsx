@@ -189,13 +189,6 @@ export const drawLaptimes2 = (
 
   // Exit and remove circles
   circles2.exit().transition().duration(500).attr("r", 0).remove();
-  const lastDataPoint = dataset[dataset.length - 1];
-  chart
-    .append("text")
-    .attr("class", "driver-name-label2")
-    .attr("x", xScale(1)) // Slight offset for clarity
-    .attr("y", dataset[dataset.length - 1].LapTime)
-    .attr("fill", lineColor)
-    .attr("font-size", 16)
-    .text(lastDataPoint.Driver);
+  
+  
 };

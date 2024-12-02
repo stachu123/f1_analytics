@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { drawLaptimes, drawLaptimes2 } from "./chart_components/DrawLapTimes";
+import { LineLegend2, LineLegend1 } from "./chart_components/LineLegend";
 
 const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
@@ -50,7 +51,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
       return totalSeconds;
     };
-    console.log(data);
+
     const processData = (rawData) => {
       return rawData
         .map((d) => ({
@@ -122,8 +123,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
     if (processedData.length > 0) {
       if (isDataChanged) {
-        svg.selectAll(".driver-name-label").remove();
         svg.selectAll(".scatterplot-circle").remove();
+        LineLegend1(processedData, svg, width, "#ff9800");
         svg.selectAll(".line").remove(); // Remove old line
         drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
       }
@@ -192,6 +193,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("fill", "white")
       .attr("font-size", 16)
       .text("+");
+
+    // legend
   }, [data, data2, globalExtents]);
 
   return <svg ref={svgRef}></svg>;
