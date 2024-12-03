@@ -7,14 +7,91 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
   const prevDataRef = useRef([]); // Store previous `data`
   const prevData2Ref = useRef([]);
+  const iszoomedRef = useRef(false);
+
+  //HELPER FUNCTIONS
+
+  // Parse lap time from string to seconds
+  const parseLapTime = (lapTime) => {
+    if (typeof lapTime !== "string") {
+      return null;
+    }
+    if (!lapTime.trim()) return null;
+
+    const timeMatch = lapTime.match(/(\d+) days? (\d+):(\d+):(\d+)\.(\d+)/);
+    if (!timeMatch) return null;
+
+    const [, days, hours, minutes, seconds, milliseconds] = timeMatch.map(
+      (v, i) => (i === 0 ? v : Number(v))
+    );
+
+    const totalSeconds =
+      days * 24 * 60 * 60 +
+      hours * 60 * 60 +
+      minutes * 60 +
+      seconds +
+      milliseconds / 1000000;
+
+    return totalSeconds;
+  };
+
+  /**
+   * Process raw data array into a new array of objects with LapNumber as number, LapTime as seconds, and other columns as strings.
+   * Also filter out rows with invalid LapTime.
+   * @param {array} rawData - The raw data array
+   * @returns {array} The processed data array
+   */
+  const processData = (rawData) => {
+    return rawData
+      .map((d) => ({
+        LapNumber: +d.LapNumber,
+        LapTime: parseLapTime(d.LapTime),
+        Driver: d.Driver,
+        Team: d.Team,
+      }))
+      .filter((d) => d.LapTime !== null);
+  };
+
+  /**
+   * Compares two datasets to check if they contain the same lap data.
+   *
+   * @param {Array} newData - The new dataset containing lap information.
+   * @param {Array} oldData - The old dataset to compare against.
+   * @returns {boolean} - Returns true if both datasets have the same lap numbers and times, otherwise false.
+   */
+  const isSameData = (newData, oldData) => {
+    if (newData.length !== oldData.length) return false;
+    return newData.every(
+      (item, index) =>
+        item.LapNumber === oldData[index].LapNumber &&
+        item.LapTime === oldData[index].LapTime
+    );
+  };
+
+  /**
+   * Formats a time in seconds to a string of the form mm:ss.cc
+   * @param {number} timeInSeconds - The time in seconds to format
+   * @returns {string} A string of the form mm:ss.cc
+   */
+  const formatTime = (timeInSeconds) => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.round((timeInSeconds % 60) * 100) / 100;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toFixed(2)
+      .padStart(5, "0")}`;
+  };
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-    // svg.selectAll("*").remove(); // Clear the SVG
 
+    if (iszoomedRef.current) {
+      svg.selectAll("*").remove();
+    }
+
+    // Set up the chart
     const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
     const height = width * 0.4; // Maintain aspect ratio
-    const margin = { top: 20, right: 80, bottom: 40, left: 60 };
+    const margin = { top: 30, right: 30, bottom: 40, left: 60 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -28,49 +105,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Parse lap time from string to seconds
-    const parseLapTime = (lapTime) => {
-      if (typeof lapTime !== "string") {
-        return null;
-      }
-      if (!lapTime.trim()) return null;
-
-      const timeMatch = lapTime.match(/(\d+) days? (\d+):(\d+):(\d+)\.(\d+)/);
-      if (!timeMatch) return null;
-
-      const [, days, hours, minutes, seconds, milliseconds] = timeMatch.map(
-        (v, i) => (i === 0 ? v : Number(v))
-      );
-
-      const totalSeconds =
-        days * 24 * 60 * 60 +
-        hours * 60 * 60 +
-        minutes * 60 +
-        seconds +
-        milliseconds / 1000000;
-
-      return totalSeconds;
-    };
-
-    const processData = (rawData) => {
-      return rawData
-        .map((d) => ({
-          LapNumber: +d.LapNumber,
-          LapTime: parseLapTime(d.LapTime),
-          Driver: d.Driver,
-          Team: d.Team,
-        }))
-        .filter((d) => d.LapTime !== null);
-    };
-    const isSameData = (newData, oldData) => {
-      if (newData.length !== oldData.length) return false;
-      return newData.every(
-        (item, index) =>
-          item.LapNumber === oldData[index].LapNumber &&
-          item.LapTime === oldData[index].LapTime
-      );
-    };
-
+    // Process data
     const processedData = processData(data);
     const processedData2 = processData(data2);
 
@@ -98,22 +133,11 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .range([innerHeight, 0])
       .nice();
 
-    /**
-     * Formats a time in seconds to a string of the form mm:ss.cc
-     * @param {number} timeInSeconds - The time in seconds to format
-     * @returns {string} A string of the form mm:ss.cc
-     */
-    const formatTime = (timeInSeconds) => {
-      const minutes = Math.floor(timeInSeconds / 60);
-      const seconds = Math.round((timeInSeconds % 60) * 100) / 100;
-      return `${minutes.toString().padStart(2, "0")}:${seconds
-        .toFixed(2)
-        .padStart(5, "0")}`;
-    };
-
+    // Axes
     const xAxis = d3.axisBottom(xScale).ticks(globalExtents.lapNumberExtent);
     const yAxis = d3.axisLeft(yScale).tickFormat(formatTime);
 
+    // Draw axes
     chart
       .append("g")
       .attr("transform", `translate(0, ${innerHeight})`)
@@ -123,20 +147,30 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
     if (processedData.length > 0) {
       if (isDataChanged) {
+        // Remove old legend, line, and circle
+        svg.selectAll(".legend-text").remove();
         svg.selectAll(".scatterplot-circle").remove();
-        LineLegend1(processedData, svg, width, "#ff9800");
-        svg.selectAll(".line").remove(); // Remove old line
+        svg.selectAll(".line").remove();
+
+        // Draw new legend, line, and circle
         drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
+        LineLegend1(processedData, svg, width, "#ff9800");
       }
     }
 
     if (processedData2.length > 0) {
       if (isData2Changed) {
+        // Remove old legend, line, and circle
+        svg.selectAll(".legend-text2").remove();
         svg.selectAll(".scatterplot-circle2").remove();
-        svg.selectAll(".line2").remove(); // Remove old line
+        svg.selectAll(".line2").remove();
+
+        // Draw new legend, line, and circle
         drawLaptimes2(processedData2, chart, xScale, yScale, "#00ff55", "#fff");
+        LineLegend2(processedData2, svg, width, "#00ff55");
       }
     }
+
     // Zoom button functionality
     svg
       .append("g")
@@ -148,6 +182,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("rx", 5)
       .attr("ry", 5)
       .on("click", () => {
+        // Reset the zoom state
+        iszoomedRef.current = true;
         // Calculate the new yScale domain
         const maxLapTime = Math.max(
           ...[...processedData, ...processedData2].map((d) => d.LapTime)
@@ -192,7 +228,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("text-anchor", "middle")
       .attr("fill", "white")
       .attr("font-size", 16)
-      .text("+");
+      .text("zoom");
 
     // legend
   }, [data, data2, globalExtents]);

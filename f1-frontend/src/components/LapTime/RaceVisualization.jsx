@@ -19,7 +19,9 @@ const RaceVisualization = () => {
     const loadRaceData = async () => {
       setLoading(true);
       try {
-        const { raceData, uniqueDrivers, globalExtents } = await fetchRaceData(raceId);
+        const { raceData, uniqueDrivers, globalExtents } = await fetchRaceData(
+          raceId
+        );
         setRaceData(raceData);
         setDriverNumbers(uniqueDrivers);
         setGlobalExtents(globalExtents);

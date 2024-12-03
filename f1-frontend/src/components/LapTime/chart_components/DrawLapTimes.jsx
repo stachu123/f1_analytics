@@ -92,16 +92,6 @@ export const drawLaptimes = (
 
   // Exit and remove circles
   circles.exit().transition().duration(500).attr("r", 0).remove();
-  const lastDataPoint = dataset[dataset.length - 1];
-
-  chart
-    .append("text")
-    .attr("class", "driver-name-label")
-    .attr("x", xScale(lastDataPoint.LapNumber) + 20) // Slight offset for clarity
-    .attr("y", yScale(lastDataPoint.LapTime))
-    .attr("fill", lineColor)
-    .attr("font-size", 16)
-    .text(lastDataPoint.Driver);
 };
 
 export const drawLaptimes2 = (
@@ -189,6 +179,4 @@ export const drawLaptimes2 = (
 
   // Exit and remove circles
   circles2.exit().transition().duration(500).attr("r", 0).remove();
-  
-  
 };

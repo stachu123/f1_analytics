@@ -131,9 +131,11 @@ button:focus-visible {
   display: flex;
   justify-content: space-between; /* Push left and right groups to the edges */
   width: 100%;                    /* Ensure the container spans the full screen */
-  padding: 0 2rem;                /* Add some horizontal padding */
+  padding: 2rem;                /* Add some horizontal padding */
   box-sizing: border-box;         /* Include padding in the width calculation */
+  margin-bottom: 0;  
 }
+
 
 .driver-buttons {
   display: flex;
@@ -143,18 +145,37 @@ button:focus-visible {
 }
 .driver-button {
   flex: 1 1 calc(25% - 10px); /* Buttons take up 25% width minus gap */
-  min-width: 40px; /* Ensure buttons have a minimum size */
-  max-width: 70px; /* Optional: Limit the maximum size */
-  font-size: 10px;
+  min-width: 50px;            /* Minimum button size */
+  max-width: 80px;            /* Maximum button size */
+  padding: 0.5rem;            /* Add padding for better button feel */
+  border-radius: 4px;         /* Slight rounding for buttons */
+  border: 1px solid #ccc;     /* Subtle border around each button */
+  background-color: #fff;     /* White background for contrast */
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .left-buttons,
 .right-buttons {
-  display: flex; /* Ensure the flex behavior applies */
-  flex-wrap: wrap; /* Enable wrapping into multiple rows */
-  gap: 15px; /* Space between buttons */
-  justify-content: flex-start; /* Align buttons to start of their section */
+  display: flex;
+  flex-wrap: wrap;            /* Allow wrapping into multiple rows */
+  gap: 10px;                  /* Space between buttons inside each container */
+  flex: 1;                    /* Make both containers take equal space */
+  padding: 1rem;              /* Add padding inside the tile */
+  background-color: #ffffff05;  /* White background for contrast */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
 }
+
+.left-buttons {
+  margin-right: 1rem;
+  border-top-left-radius: 0; /* Remove rounding */
+  border-top-right-radius: 0; /* Remove rounding */
+}
+
+.right-buttons {
+  
+  border-top-left-radius: 0 /* User nice rounded look. */;
+  border-top-right-radius: 0;}
+  
 
 .driver-button:hover {
   background-color: #45a049;
@@ -180,8 +201,9 @@ button:focus-visible {
 
 .laptime-plot-container {
   width: 100%;
-  max-width: 1280px; /* Limit the maximum width of the plot */
-  margin-top: 2rem;
+  max-width: 1800px; /* Limit the maximum width of the plot */
+  display: flex;
+  flex-wrap: wrap;
   text-align: center;
 }
 
