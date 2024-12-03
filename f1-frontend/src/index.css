@@ -207,3 +207,28 @@ button:focus-visible {
   text-align: center;
 }
 
+.lap-info-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.lap-info-tile {
+  display: flex;
+  flex-wrap: wrap;            /* Allow wrapping into multiple rows */
+  gap: 10px;                  /* Space between buttons inside each container */
+  flex: 1;                    /* Make both containers take equal space */
+  padding: 1rem;              /* Add padding inside the tile */
+  background-color: #ffffff05;  /* White background for contrast */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
+
+}
+
+.lap-info-tile h3 {
+  margin-bottom: 10px;
+}
+
+.lap-info-tile p {
+  margin: 5px 0;
+}
+

@@ -1,13 +1,15 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { drawLaptimes, drawLaptimes2 } from "./chart_components/DrawLapTimes";
 import { LineLegend2, LineLegend1 } from "./chart_components/LineLegend";
+import { ZoomButton } from "./chart_components/ZoomButton";
 
 const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
   const prevDataRef = useRef([]); // Store previous `data`
   const prevData2Ref = useRef([]);
   const iszoomedRef = useRef(false);
+  const [selectedLap, setSelectedLap] = useState(null); // Store selected lap
 
   //HELPER FUNCTIONS
 
@@ -84,10 +86,6 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   useEffect(() => {
     const svg = d3.select(svgRef.current);
 
-    if (iszoomedRef.current) {
-      svg.selectAll("*").remove();
-    }
-
     // Set up the chart
     const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
     const height = width * 0.4; // Maintain aspect ratio
@@ -117,9 +115,15 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
     if (!isDataChanged && !isData2Changed) return;
 
     // Update previous data references
-    if (isDataChanged) prevDataRef.current = data;
-    if (isData2Changed) prevData2Ref.current = data2;
+    if (isDataChanged) prevDataRef.current = data && !iszoomedRef.current;
+    if (isData2Changed) prevData2Ref.current = data2 && !iszoomedRef.current;
 
+    if (iszoomedRef.current) {
+      svg.selectAll(".line").remove();
+      svg.selectAll(".line2").remove();
+      svg.selectAll(".y-axis").remove();
+      iszoomedRef.current = false;
+    }
     // Scales
     const xScale = d3
       .scaleLinear()
@@ -182,23 +186,29 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("rx", 5)
       .attr("ry", 5)
       .on("click", () => {
+        if (iszoomedRef.current) {
+          svg.selectAll("*").remove();
+          iszoomedRef.current = false;
+          LaptimesPlot({ data, data2, globalExtents });
+        }
         // Reset the zoom state
         iszoomedRef.current = true;
+
         // Calculate the new yScale domain
         const maxLapTime = Math.max(
           ...[...processedData, ...processedData2].map((d) => d.LapTime)
         );
         yScale.domain([globalExtents.lapTimeExtent[0], maxLapTime - 10]);
-
         // If needed, adjust the xScale to match the zoomed range (optional)
         xScale.domain(globalExtents.lapNumberExtent); // Ensure the xScale domain remains consistent
 
-        // Redraw the y-axis
-        yAxisGroup
-          .transition()
-          .call(d3.axisLeft(yScale).tickFormat(formatTime));
+        // Remove the old Y-axis
+        svg.select(".y-axis").remove();
 
-        //Clear existing data points and lines
+        // Redraw the y-axis
+        yAxisGroup.call(d3.axisLeft(yScale).tickFormat(formatTime));
+
+        // Clear existing data points and lines
         chart.selectAll(".data-point").remove();
         chart.selectAll(".line").remove(); // Remove first dataset line
         chart.selectAll(".line2").remove(); // Remove second dataset line
@@ -230,7 +240,41 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("font-size", 16)
       .text("zoom");
 
-    // legend
+    chart
+      .selectAll(".lap-rect")
+      .data(processedData)
+      .enter()
+      .append("rect")
+      .attr("class", "lap-rect")
+      .attr("x", (d) => xScale(d.LapNumber - 0.5)) // Center rectangles around the lap number
+      .attr("y", 0)
+      .attr("width", xScale(1) - xScale(0)) // Width spans 1 lap
+      .attr("height", innerHeight)
+      .attr("fill", "transparent")
+      .attr("stroke", "lightgray")
+      .attr("stroke-width", 0.05)
+      .on("mouseover", function (event, d) {
+        d3.select(this).attr("stroke", "black").attr("stroke-width", 1); // Highlight on hover
+      })
+      .on("mouseout", function () {
+        const isSelected =
+          selectedLap?.LapNumber === d3.select(this).datum().LapNumber;
+        d3.select(this)
+          .attr("stroke", isSelected ? "blue" : "lightgray")
+          .attr("stroke-width", isSelected ? 0.05 : 0.05); // Restore style after hover
+      })
+      .on("click", function (event, d) {
+        // Handle selection
+        console.log("Lap clicked:", d);
+        setSelectedLap(d); // Update selected lap state
+
+        // Update styles for all rectangles
+        chart
+          .selectAll(".lap-rect")
+          .attr("stroke", "lightgray")
+          .attr("stroke-width", 0.05);
+        d3.select(this).attr("stroke", "blue").attr("stroke-width", 2); // Highlight selected rectangle
+      });
   }, [data, data2, globalExtents]);
 
   return <svg ref={svgRef}></svg>;
