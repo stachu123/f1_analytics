@@ -61,7 +61,7 @@ const RaceVisualization = () => {
         lap.DriverNumber === driverNumber
     );
   };
-
+  console.log("Selected Lap:", selectedLap);
   const lapData1 = getLapDataForDriver(selectedDriver1);
   const lapData2 = getLapDataForDriver(selectedDriver2);
 

@@ -9,7 +9,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const prevDataRef = useRef([]); // Store previous `data`
   const prevData2Ref = useRef([]);
   const iszoomedRef = useRef(false);
-  const [selectedLap, setSelectedLap] = useState(null); // Store selected lap
+  const [selectedLap, setSelectedLap] = useState({ LapNumber: null }); // Store selected lap
 
   //HELPER FUNCTIONS
 
@@ -85,7 +85,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
-
+    svg.selectAll("lap-rect").remove();
     // Set up the chart
     const width = svg.node().parentNode?.getBoundingClientRect().width || 800;
     const height = width * 0.4; // Maintain aspect ratio
@@ -115,8 +115,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
     if (!isDataChanged && !isData2Changed) return;
 
     // Update previous data references
-    if (isDataChanged) prevDataRef.current = data && !iszoomedRef.current;
-    if (isData2Changed) prevData2Ref.current = data2 && !iszoomedRef.current;
+    if (isDataChanged) prevDataRef.current = data;
+    if (isData2Changed) prevData2Ref.current = data2;
 
     if (iszoomedRef.current) {
       svg.selectAll(".line").remove();
@@ -151,10 +151,11 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
     if (processedData.length > 0) {
       if (isDataChanged) {
-        // Remove old legend, line, and circle
+        // Remove old legend, line, rectangles and circle
         svg.selectAll(".legend-text").remove();
         svg.selectAll(".scatterplot-circle").remove();
         svg.selectAll(".line").remove();
+        svg.selectAll("lap-rect").remove();
 
         // Draw new legend, line, and circle
         drawLaptimes(processedData, chart, xScale, yScale, "#ff9800", "#fff");
@@ -164,10 +165,11 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
 
     if (processedData2.length > 0) {
       if (isData2Changed) {
-        // Remove old legend, line, and circle
+        // Remove old legend, line, rectangles and circle
         svg.selectAll(".legend-text2").remove();
         svg.selectAll(".scatterplot-circle2").remove();
         svg.selectAll(".line2").remove();
+        svg.selectAll("lap-rect").remove();
 
         // Draw new legend, line, and circle
         drawLaptimes2(processedData2, chart, xScale, yScale, "#00ff55", "#fff");
@@ -240,6 +242,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("font-size", 16)
       .text("zoom");
 
+    // Draw rectangles to select lap
+    svg.selectAll(".lap-rect").remove();
     chart
       .selectAll(".lap-rect")
       .data(processedData)
@@ -253,29 +257,33 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("fill", "transparent")
       .attr("stroke", "lightgray")
       .attr("stroke-width", 0.05)
-      .on("mouseover", function (event, d) {
-        d3.select(this).attr("stroke", "black").attr("stroke-width", 1); // Highlight on hover
-      })
-      .on("mouseout", function () {
-        const isSelected =
-          selectedLap?.LapNumber === d3.select(this).datum().LapNumber;
-        d3.select(this)
-          .attr("stroke", isSelected ? "blue" : "lightgray")
-          .attr("stroke-width", isSelected ? 0.05 : 0.05); // Restore style after hover
-      })
+      // .on("mouseover", function (event, d) {
+      //   if (d.LapNumber !== selectedLap.LapNumber) {
+      //     d3.select(this).attr("stroke", "black").attr("stroke-width", 1);
+      //   }
+      // })
+      // .on("mouseout", function (event, d) {
+      //   if (d.LapNumber !== selectedLap.LapNumber) {
+      //     d3.select(this)
+      //       .attr("stroke", "lightgray")
+      //       .attr("stroke-width", 0.05);
+      //   }
+      // })
       .on("click", function (event, d) {
-        // Handle selection
-        console.log("Lap clicked:", d);
-        setSelectedLap(d); // Update selected lap state
+        const clickedLap = d3.select(this).datum();
+        setSelectedLap(clickedLap.LapNumber); // Update selected lap state
 
         // Update styles for all rectangles
         chart
           .selectAll(".lap-rect")
-          .attr("stroke", "lightgray")
-          .attr("stroke-width", 0.05);
-        d3.select(this).attr("stroke", "blue").attr("stroke-width", 2); // Highlight selected rectangle
+          .attr("stroke", (d) =>
+            d.LapNumber === clickedLap.LapNumber ? "blue" : "lightgray"
+          )
+          .attr("stroke-width", (d) =>
+            d.LapNumber === clickedLap.LapNumber ? 2 : 0.05
+          );
       });
-  }, [data, data2, globalExtents]);
+  }, [data, data2, globalExtents, setSelectedLap, selectedLap]);
 
   return <svg ref={svgRef}></svg>;
 };
