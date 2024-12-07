@@ -3,6 +3,8 @@ import * as d3 from "d3";
 import { drawLaptimes, drawLaptimes2 } from "./chart_components/DrawLapTimes";
 import { LineLegend2, LineLegend1 } from "./chart_components/LineLegend";
 import { ZoomButton } from "./chart_components/ZoomButton";
+import { ChartTiles } from "./chart_components/LapChartTiles"; // Import the ChartTiles component
+import "../../index.css";
 
 const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const svgRef = useRef();
@@ -10,6 +12,8 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
   const prevData2Ref = useRef([]);
   const iszoomedRef = useRef(false);
   const [selectedLap, setSelectedLap] = useState({ LapNumber: null }); // Store selected lap
+  const [driverData1, setDriverData1] = useState({ LapNumber: null });
+  const [driverData2, setDriverData2] = useState({ LapNumber: null });
 
   //HELPER FUNCTIONS
 
@@ -50,6 +54,9 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
         LapTime: parseLapTime(d.LapTime),
         Driver: d.Driver,
         Team: d.Team,
+        Position: d.Position,
+        DriverNumber: d.DriverNumber,
+        Compound: d.Compound,
       }))
       .filter((d) => d.LapTime !== null);
   };
@@ -178,6 +185,7 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
     }
 
     // Zoom button functionality
+    console.log(data);
     svg
       .append("g")
       .attr("transform", `translate(${width - 40}, 10)`)
@@ -257,21 +265,25 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       .attr("fill", "transparent")
       .attr("stroke", "lightgray")
       .attr("stroke-width", 0.05)
-      // .on("mouseover", function (event, d) {
-      //   if (d.LapNumber !== selectedLap.LapNumber) {
-      //     d3.select(this).attr("stroke", "black").attr("stroke-width", 1);
-      //   }
-      // })
-      // .on("mouseout", function (event, d) {
-      //   if (d.LapNumber !== selectedLap.LapNumber) {
-      //     d3.select(this)
-      //       .attr("stroke", "lightgray")
-      //       .attr("stroke-width", 0.05);
-      //   }
-      // })
+      .attr("cursor", "pointer")
       .on("click", function (event, d) {
         const clickedLap = d3.select(this).datum();
-        setSelectedLap(clickedLap.LapNumber); // Update selected lap state
+
+        // Log the clicked lap directly
+
+        // Update the state
+        setSelectedLap(clickedLap);
+
+        // Update driver data using the clicked lap directly
+        const driver1Lap = processedData.find(
+          (d) => +d.LapNumber === clickedLap.LapNumber
+        );
+        const driver2Lap = processedData2.find(
+          (d) => +d.LapNumber === clickedLap.LapNumber
+        );
+
+        setDriverData1(driver1Lap || { LapNumber: null });
+        setDriverData2(driver2Lap || { LapNumber: null });
 
         // Update styles for all rectangles
         chart
@@ -285,7 +297,16 @@ const LaptimesPlot = ({ data = [], data2 = [], globalExtents }) => {
       });
   }, [data, data2, globalExtents, setSelectedLap, selectedLap]);
 
-  return <svg ref={svgRef}></svg>;
+  return (
+    <div className="laptime-plot-container">
+      <svg ref={svgRef}></svg>
+      <ChartTiles
+        selectedLap={selectedLap}
+        driverData1={driverData1}
+        driverData2={driverData2}
+      />
+    </div>
+  );
 };
 
 export default LaptimesPlot;

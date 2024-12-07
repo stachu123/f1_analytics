@@ -53,18 +53,6 @@ const RaceVisualization = () => {
   const filteredData1 = getFilteredData(selectedDriver1);
   const filteredData2 = getFilteredData(selectedDriver2);
 
-  const getLapDataForDriver = (driverNumber) => {
-    if (!selectedLap || !driverNumber) return null;
-    return raceData.find(
-      (lap) =>
-        lap.LapNumber === selectedLap.LapNumber &&
-        lap.DriverNumber === driverNumber
-    );
-  };
-  console.log("Selected Lap:", selectedLap);
-  const lapData1 = getLapDataForDriver(selectedDriver1);
-  const lapData2 = getLapDataForDriver(selectedDriver2);
-
   return (
     <div className="race-visualization-container">
       {loading && <p>Loading race data...</p>}
@@ -115,64 +103,14 @@ const RaceVisualization = () => {
           </div>
 
           {/* Lap Times Plot */}
-          <div className="laptime-plot-container">
-            <LaptimesPlot
-              data={filteredData1} // Pass data for the first driver
-              data2={filteredData2} // Pass data for the second driver
-              globalExtents={globalExtents}
-              selectedLap={selectedLap} // Pass the selected lap
-              setSelectedLap={setSelectedLap}
-            />
-          </div>
 
-          {/* Additional Information Tiles */}
-          <div className="lap-info-container">
-            {/* Tile for Driver 1 */}
-            <div className="lap-info-tile">
-              <h3>Driver 1 Details</h3>
-              {lapData1 ? (
-                <div>
-                  <p>
-                    <strong>Lap Number:</strong> {lapData1.LapNumber}
-                  </p>
-                  <p>
-                    <strong>Lap Time:</strong> {lapData1.LapTime}s
-                  </p>
-                  <p>
-                    <strong>Driver:</strong> {lapData1.Driver}
-                  </p>
-                  <p>
-                    <strong>Team:</strong> {lapData1.Team}
-                  </p>
-                </div>
-              ) : (
-                <p>No lap selected for Driver 1.</p>
-              )}
-            </div>
-
-            {/* Tile for Driver 2 */}
-            <div className="lap-info-tile">
-              <h3>Driver 2 Details</h3>
-              {lapData2 ? (
-                <div>
-                  <p>
-                    <strong>Lap Number:</strong> {lapData2.LapNumber}
-                  </p>
-                  <p>
-                    <strong>Lap Time:</strong> {lapData2.LapTime}s
-                  </p>
-                  <p>
-                    <strong>Driver:</strong> {lapData2.Driver}
-                  </p>
-                  <p>
-                    <strong>Team:</strong> {lapData2.Team}
-                  </p>
-                </div>
-              ) : (
-                <p>No lap selected for Driver 2.</p>
-              )}
-            </div>
-          </div>
+          <LaptimesPlot
+            data={filteredData1} // Pass data for the first driver
+            data2={filteredData2} // Pass data for the second driver
+            globalExtents={globalExtents}
+            selectedLap={selectedLap} // Pass the selected lap
+            setSelectedLap={setSelectedLap}
+          />
         </>
       )}
     </div>
