@@ -1,0 +1,76 @@
+.chart-tiles {
+    display: flex;
+    justify-content: space-between; 
+    align-items: stretch; 
+    width: 100%; 
+    gap: 20px; 
+    margin-top: 20px;
+    box-sizing: border-box; 
+  }
+  
+  .tile {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    background-color: #ffffff05;
+  }
+  
+  .tile-content {
+    display: flex;
+    align-items: center; /* Align items vertically */
+  }
+  
+  .driver-image-container {
+    flex: 0 0 300px; /* Fixed width for the driver image */
+    margin-right: 5px;
+  }
+  
+  .driver-image {
+    width: 100%;
+    border-radius: 8px;
+  }
+  
+  .driver-info {
+    flex: 1; /* Take up remaining space */
+  }
+  
+  .country-flag {
+    width: 60px;
+    height: 36px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  
+  .team-logo {
+    width: 120px;
+    height: 80px;
+    margin-bottom: 16px; /* Space below the team logo */
+    align-self: flex-start; /* Align the team logo with the start of the name */
+  }
+  
+  .tire-image {
+    width: 70px;
+    height: 70px;
+    margin-left: 12px;
+    margin-right:12px;
+    vertical-align: middle;
+  }
+
+  .chart-tiles .tile h3 {
+    font-family: 'Anton SC', sans-serif; /* Apply Lobster font */
+    font-size: 2em; /* Adjust font size as needed */
+    font-weight: normal; /* Optional: Adjust the weight if needed */
+    color: #faf8f8ec; /* Customize the color of the name */
+    text-transform: uppercase; /* Optional: For a more stylish look */
+  }
+
+  .chart-tiles .tile p {
+    font-family: 'Anton SC', sans-serif; /* Apply Lobster font */
+    font-size: 1.8em; /* Adjust font size as needed */
+    font-weight: normal; /* Optional: Adjust the weight if needed */
+    color: #faf8f8ec; /* Customize the color of the name */
+    text-transform: uppercase; /* Optional: For a more stylish look */
+  }
